@@ -1,0 +1,13 @@
+# GITIGNORE
+
+# Ignore folders
+*.vscode/
+*build/
+docs/html/
+docs/latex/
+
+# Ignore file types
+*.exe
+*.obj
+*.o
+
