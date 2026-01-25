@@ -1,14 +1,20 @@
 #ifndef EEPROM_25LC040A_H
     #define EEPROM_25LC040A_H
 
+    #define WRITE_BY_BYTE
+    #ifndef WRITE_BY_BYTE
+        #define WRITE_FULL_BLOCK
+    #endif
+
     #include "spi_interface.h"
 
-    using dword = uint16_t;
-    using pointer_size = dword;
+    using pointer_size = word;
 
     class EEPROM_25LC040A {
     public:
-        static constexpr dword MAX_ADDRESS = 511;
+        static constexpr pointer_size MAX_ADDRESS = 511;
+
+        using mask_type = word;
 
         explicit EEPROM_25LC040A(ISpiBitBang* spi) noexcept;
 
@@ -20,11 +26,12 @@
         void writeByte(const_type<pointer_size> address, const_type<byte> data);
         void writeByteArray(const_type<pointer_size> address, const byte_array data, const_type<array_size> length);
 
-        bool isReady() const noexcept;
+        inline void stop() noexcept;
+        inline void resume() noexcept;
     private:
         ISpiBitBang* spi;
+        bool isWorking = true;
 
-        static constexpr byte COMMAND_BIT_SIZE = 3;
         enum Command : byte {
             CMD_READ = 0b011,
             CMD_WRITE = 0b010,
@@ -34,7 +41,9 @@
             CMD_WRSR = 0b001
         };
 
-        void enableWrite();
-        void waitForWriteComplete();
+        inline void validateAddress(const_type<pointer_size> address) const;
+        inline void validateState() const;
+
+        inline mask_type createInstruction(const_type<pointer_size> address, const_type<Command> cmd) const noexcept;
     };
 #endif
