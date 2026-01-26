@@ -24,7 +24,7 @@
         virtual byte transferBit(const_type<bit> data) = 0; // transfer 1 bit
         virtual byte transferByte(const_type<byte> data) = 0; // transfer 1 byte
         virtual byte_array transferBytes(const byte_array data, const_type<array_size> length) = 0; // transfer byte[]
-        virtual void delay(const_type<uint32_t> ms) = 0;
+        virtual void delay(const_type<dword> ms) = 0;
     };
 
 #endif
