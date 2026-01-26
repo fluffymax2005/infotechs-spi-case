@@ -1,3 +1,7 @@
+#include "../src/include/mock_spi_driver.h"
+#include "test_runner.h"
+
 int main() {
-    return 0;
+    MockSpi spi;
+    TestRunner runner(&spi);
 }
