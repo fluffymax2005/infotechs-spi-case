@@ -10,18 +10,27 @@
 
     class TestRunner {
     public:
-        TestRunner(ISpiBitBang* spi);
+        TestRunner() = default;
 
         template <typename Func>
-        void runTest(const std::string& name, Func func);
+        void runTest(const std::string& name, Func func) {
+            std::cout << std::endl << "=== RUNNING test: " << name << std::endl;
+
+            try {
+                func();
+                ++testsPassed;
+                std::cout << "[PASS] " << name << std::endl;
+            } catch (const std::exception& e) {
+                ++testsFailed;
+                std::cout << "[FAIL] " << name << ": " << e.what() << std::endl;
+            }
+        }
 
         void printSummary() const;
 
     private:
         int testsPassed{0};
         int testsFailed{0};
-
-        EEPROM_25LC040A eeprom;
     };
 
 #endif
