@@ -14,6 +14,15 @@
     public:
         static constexpr pointer_size MAX_ADDRESS = 511;
 
+        enum Command : byte {
+            CMD_READ = 0b011,
+            CMD_WRITE = 0b010,
+            CMD_WREN = 0b110,
+            CMD_WRDI = 0b100,
+            CMD_RDSR = 0b101,
+            CMD_WRSR = 0b001
+        };
+
         using mask_type = word;
 
         explicit EEPROM_25LC040A(ISpiBitBang* spi) noexcept;
@@ -31,15 +40,6 @@
     private:
         ISpiBitBang* spi;
         bool isWorking = true;
-
-        enum Command : byte {
-            CMD_READ = 0b011,
-            CMD_WRITE = 0b010,
-            CMD_WREN = 0b110,
-            CMD_WRDI = 0b100,
-            CMD_RDSR = 0b101,
-            CMD_WRSR = 0b001
-        };
 
         inline void validateAddress(const_type<pointer_size> address) const;
         inline void validateState() const;
