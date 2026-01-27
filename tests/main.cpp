@@ -36,11 +36,6 @@ int main() {
 void testReadBadAddress() {
     MockSpi spi;
     const pointer_size ADDRESS = EEPROM_25LC040A::MAX_ADDRESS + 1; // invalid address
-    const byte VALUE = std::rand() % 256; // random byte value
-
-    // Response to read is [0x00, 0x00, VALUE]
-    byte response[] = {0x00, 0x00, VALUE};
-    spi.setByteArrayResponseByAddress(ADDRESS, response, 3);
 
     // Make EEPROM
     EEPROM_25LC040A eeprom(&spi);
@@ -52,11 +47,9 @@ void testReadBadAddress() {
 void testReadBit() {
     MockSpi spi;
     const pointer_size ADDRESS = std::rand() % 512; // random address [0; 511]
-    const bit VALUE = std::rand() % 2; // random bit value
+    const byte VALUE = (std::rand() % 2) << 7 | std::rand() % 256 & 0x7F; // random byte value to set
 
-    // Response to read is [0x00, 0x00, VALUE]
-    byte response[] = {0x00, 0x00, VALUE};
-    spi.setByteArrayResponseByAddress(ADDRESS, response, 3);
+    spi.setByteArrayByAddress(ADDRESS, const_cast<byte_array>(&VALUE), 1);
 
     // Make EEPROM
     EEPROM_25LC040A eeprom(&spi);
@@ -65,7 +58,7 @@ void testReadBit() {
     auto result = eeprom.readBit(ADDRESS);
 
     // Assert result
-    assert(result == VALUE);
+    assert(result == VALUE >> 7);
 }
 
 void testReadByte() {
@@ -73,9 +66,7 @@ void testReadByte() {
     const pointer_size ADDRESS = std::rand() % 512; // random address [0; 511]
     const byte VALUE = std::rand() % 256; // random byte value
 
-    // Response to read is [0x00, 0x00, VALUE]
-    byte response[] = {0x00, 0x00, VALUE};
-    spi.setByteArrayResponseByAddress(ADDRESS, response, 3);
+    spi.setByteArrayByAddress(ADDRESS, const_cast<byte_array>(&VALUE), 1);
 
     // Make EEPROM
     EEPROM_25LC040A eeprom(&spi);
@@ -90,25 +81,25 @@ void testReadByte() {
 void testReadByteArray() {
     MockSpi spi;
     const pointer_size ADDRESS = std::rand() % 512; // random address [0; 511]
-    const array_size length = std::rand() % 256 + 2; // random response array size
+    const array_size length = std::rand() % 256; // random response array size
 
     byte* response = new (std::nothrow) byte[length] {0x00, 0x00};
     if (!response)
         throw std::runtime_error("testReadByteArray: no memory for response array");
-    for (array_size i = 2; i < length; ++i)
+    for (array_size i = 0; i < length; ++i)
         response[i] = std::rand() % 256; // random byte value
 
-    spi.setByteArrayResponseByAddress(ADDRESS, response, length);
+    spi.setByteArrayByAddress(ADDRESS, response, length);
 
     // Make EEPROM
     EEPROM_25LC040A eeprom(&spi);
 
     // "Read" byte array. Length = length - 2 because trash data is not read
-    auto result = eeprom.readByteArray(ADDRESS, length - 2);
+    auto result = eeprom.readByteArray(ADDRESS, length);
 
     // Assert result
     for (array_size i = 0; i < length - 2; ++i)
-        assert(result[i] == response[i + 2]);
+        assert(result[i] == response[i]);
 }
 
 void testWriteBadAddress() {
@@ -136,7 +127,7 @@ void testWriteBit() {
 
     // Assert record result
     const auto result = spi.getByteArrayByAddress(ADDRESS);
-    const auto v = *reinterpret_cast<byte*>(result.ptr) >> 7;
+    const auto v = *result >> 7;
     assert(v == VALUE);
 }
 
@@ -154,8 +145,7 @@ void testWriteByte() {
 
     // Assert record result
     const auto result = spi.getByteArrayByAddress(ADDRESS);
-    const auto ptrv = reinterpret_cast<byte*>(result.ptr);
-    const auto v = *ptrv;
+    const auto v = *result;
     assert(v == VALUE);
 }
 
