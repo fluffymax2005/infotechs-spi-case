@@ -5,23 +5,31 @@
 
 EEPROM_25LC040A::EEPROM_25LC040A(ISpiBitBang* spi) noexcept : spi(spi) {}
 
-bit EEPROM_25LC040A::readBit(const_type<pointer_size> address) {
+const bit EEPROM_25LC040A::readBit(const_type<pointer_size> address) const {
     if (!spi)
         throw std::runtime_error("EEPROM_25LC040A::readBit(): \"spi\" is nullptr");
     validateAddress(address);
     validateState();
 
+    const word instruction = createInstruction(address, CMD_READ);
+    byte arr[4];
+    arr[0] = instruction & 0x00FF;
+    arr[1] = (instruction & 0xFF00) >> 8;
 
-    word instruction = createInstruction(address, CMD_READ);
+    word* length_ptr = reinterpret_cast<word*>(arr + 2);
+    length_ptr[0] = 1;
 
     spi->chipDeselect();
-    auto result = spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));
+    const auto response = spi->transferBytes(arr, 4);
     spi->chipSelect();
 
-    return result[2] >> 7;
+    const bit bit = response[0] >> 7;
+    delete[] response;
+
+    return bit;
 }
 
-byte EEPROM_25LC040A::readByte(const_type<pointer_size> address) {
+const byte EEPROM_25LC040A::readByte(const_type<pointer_size> address) const {
     if (!spi)
         throw std::runtime_error("EEPROM_25LC040A::readByte(): \"spi\" is nullptr");
     validateAddress(address);
@@ -29,15 +37,24 @@ byte EEPROM_25LC040A::readByte(const_type<pointer_size> address) {
 
     // Instruction format: 0000<9_bit_address>011
     word instruction = createInstruction(address, CMD_READ);
+    byte arr[4];
+    arr[0] = instruction & 0x00FF;
+    arr[1] = (instruction & 0xFF00) >> 8;
+
+    word* length_ptr = reinterpret_cast<word*>(arr + 2);
+    length_ptr[0] = 1;
 
     spi->chipDeselect();
-    auto result = spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));
+    auto response = spi->transferBytes(arr, 4);
     spi->chipSelect();
 
-    return result[2];
+    const byte byte = response[0];
+    delete[] response;
+
+    return byte;
 }
 
-byte_array EEPROM_25LC040A::readByteArray(const_type<pointer_size> address, const_type<array_size> length) {
+const byte_array EEPROM_25LC040A::readByteArray(const_type<pointer_size> address, const_type<array_size> length) const {
     if (!spi)
         throw std::runtime_error("EEPROM_25LC040A::readByteArray(): \"spi\" is nullptr");
     if (!length)
@@ -47,15 +64,21 @@ byte_array EEPROM_25LC040A::readByteArray(const_type<pointer_size> address, cons
 
     // Instruction format: 0000<9_bit_address>011
     word instruction = createInstruction(address, CMD_READ);
+    byte arr[4];
+    arr[0] = instruction & 0x00FF;
+    arr[1] = (instruction & 0xFF00) >> 8;
+
+    word* length_ptr = reinterpret_cast<word*>(arr + 2);
+    length_ptr[0] = length;
 
     spi->chipDeselect();
-    auto result = spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));
+    const auto result = spi->transferBytes(arr, length);
     spi->chipSelect();
 
-    return result + 2;
+    return result;
 }
 
-void EEPROM_25LC040A::writeBit(const_type<pointer_size> address, const_type<bit> data) {
+void EEPROM_25LC040A::writeBit(const_type<pointer_size> address, const_type<bit> data) const {
     validateAddress(address);
     validateState();
 
@@ -80,7 +103,7 @@ void EEPROM_25LC040A::writeBit(const_type<pointer_size> address, const_type<bit>
     word instruction = createInstruction(address, CMD_READ);
 
     spi->chipDeselect();
-    const auto save = spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction)) + 2;
+    const auto save = spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));
     spi->chipSelect();
 
     // 2. Enable writing
@@ -92,10 +115,13 @@ void EEPROM_25LC040A::writeBit(const_type<pointer_size> address, const_type<bit>
 
     // 3. Create byte array which consists of instruction (2 bytes) and saved bites with one bit changed (1 bytes)
     instruction = createInstruction(address, CMD_WRITE);
-    byte arr[3];
+    byte arr[5];
     arr[0] = instruction & 0x00FF; // 1st lowest byte
     arr[1] = (instruction & 0xFF00) >> 8; // 2nd lowest byte
-    arr[2] = data << 7 | *save & 0x7F; // 3rd lowest byte, 1st new bit, other are saved
+
+    word* length_ptr = reinterpret_cast<word*>(arr + 2);
+    length_ptr[0] = 1; // arr[2] and arr[3] are length to write
+    arr[4] = data << 7 | *save & 0x7F; // 3rd lowest byte, 1st new bit, other are saved
 
     spi->chipDeselect();
     spi->transferBytes(arr, sizeof(arr));
@@ -109,7 +135,7 @@ void EEPROM_25LC040A::writeBit(const_type<pointer_size> address, const_type<bit>
     spi->chipSelect();
 }
 
-void EEPROM_25LC040A::writeByte(const_type<pointer_size> address, const_type<byte> data) {
+void EEPROM_25LC040A::writeByte(const_type<pointer_size> address, const_type<byte> data) const {
     validateAddress(address);
     validateState();
 
@@ -123,10 +149,13 @@ void EEPROM_25LC040A::writeByte(const_type<pointer_size> address, const_type<byt
     // 2. Create byte array which consists of instruction (2 bytes) and saved bites with one bit changed (1 bytes)
 
     instruction = createInstruction(address, CMD_WRITE);
-    byte arr[3];
+    byte arr[5];
     arr[0] = instruction & 0x00FF; // 1st lowest byte
     arr[1] = (instruction & 0xFF00) >> 8; // 2nd lowest byte
-    arr[2] = data; // 3th byte
+
+    word* length_ptr = reinterpret_cast<word*>(arr + 2);
+    length_ptr[0] = 1; // arr[2] and arr[3] are length to write
+    arr[4] = data; // 3rd lowest byte, 1st new bit, other are saved
 
     spi->chipDeselect();
     spi->transferBytes(arr, sizeof(arr));
@@ -140,7 +169,7 @@ void EEPROM_25LC040A::writeByte(const_type<pointer_size> address, const_type<byt
     spi->chipSelect();
 }
 
-void EEPROM_25LC040A::writeByteArray(const_type<pointer_size> address, const byte_array data, const_type<array_size> length) {
+void EEPROM_25LC040A::writeByteArray(const_type<pointer_size> address, const byte_array data, const_type<array_size> length) const {
     if (!length)
         throw std::invalid_argument("EEPROM_25LC040A::writeByteArray(): \"length\" is null");
     if (!data)
@@ -162,7 +191,6 @@ void EEPROM_25LC040A::writeByteArray(const_type<pointer_size> address, const byt
     spi->chipSelect();
     
     // 3. Write bytes arr
-
     #ifdef WRITE_BY_BYTE
         for (pointer_size i = 0; i < length; ++i) {
             spi->chipDeselect();
@@ -189,7 +217,7 @@ inline void EEPROM_25LC040A::resume() noexcept {
     isWorking = true;
 }
 
-inline void EEPROM_25LC040A::validateAddress(const_type<pointer_size> address) const {
+inline void EEPROM_25LC040A::validateAddress(const_type<pointer_size> address) {
     if (address > MAX_ADDRESS)
         throw std::out_of_range("EEPROM_25LC040A::validateAddress(): given \"address\" is bigger than EEPROM_25LC040A::MAX_ADDRESS");
 }
@@ -198,7 +226,7 @@ inline void EEPROM_25LC040A::validateState() const {
         throw std::runtime_error("EEPROM_25LC040A::validateState(): device isn't working");
 }
 
-inline EEPROM_25LC040A::mask_type EEPROM_25LC040A::createInstruction(const_type<pointer_size> address, const_type<Command> cmd) const noexcept {
+inline EEPROM_25LC040A::mask_type EEPROM_25LC040A::createInstruction(const_type<pointer_size> address, const_type<Command> cmd) noexcept {
     mask_type instruction = cmd;
     return instruction | address << 3;
 }

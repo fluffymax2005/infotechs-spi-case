@@ -13,6 +13,7 @@
     class EEPROM_25LC040A {
     public:
         static constexpr pointer_size MAX_ADDRESS = 511;
+        static constexpr byte MAX_BYTES_TO_WRITE_AT_ONCE = 16;
 
         enum Command : byte {
             CMD_READ = 0b011,
@@ -27,13 +28,13 @@
 
         explicit EEPROM_25LC040A(ISpiBitBang* spi) noexcept;
 
-        bit readBit(const_type<pointer_size> address);
-        byte readByte(const_type<pointer_size> address);
-        byte_array readByteArray(const_type<pointer_size> address, const_type<array_size> length);
+        const bit readBit(const_type<pointer_size> address) const;
+        const byte readByte(const_type<pointer_size> address) const;
+        const byte_array readByteArray(const_type<pointer_size> address, const_type<array_size> length) const;
 
-        void writeBit(const_type<pointer_size> address, const_type<bit> data);
-        void writeByte(const_type<pointer_size> address, const_type<byte> data);
-        void writeByteArray(const_type<pointer_size> address, const byte_array data, const_type<array_size> length);
+        void writeBit(const_type<pointer_size> address, const_type<bit> data) const;
+        void writeByte(const_type<pointer_size> address, const_type<byte> data) const;
+        void writeByteArray(const_type<pointer_size> address, const byte_array data, const_type<array_size> length) const;
 
         inline void stop() noexcept;
         inline void resume() noexcept;
@@ -41,9 +42,9 @@
         ISpiBitBang* spi;
         bool isWorking = true;
 
-        inline void validateAddress(const_type<pointer_size> address) const;
+        static inline void validateAddress(const_type<pointer_size> address);
         inline void validateState() const;
 
-        inline mask_type createInstruction(const_type<pointer_size> address, const_type<Command> cmd) const noexcept;
+        static inline mask_type createInstruction(const_type<pointer_size> address, const_type<Command> cmd) noexcept;
     };
 #endif
