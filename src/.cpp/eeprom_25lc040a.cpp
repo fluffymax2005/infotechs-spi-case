@@ -101,9 +101,15 @@ void EEPROM_25LC040A::writeBit(const_type<pointer_size> address, const_type<bit>
 
     // 1. Save current byte
     word instruction = createInstruction(address, CMD_READ);
+    byte arr[5];
+    arr[0] = instruction & 0x00FF;
+    arr[1] = (instruction & 0xFF00) >> 8;
+
+    word* length_ptr = reinterpret_cast<word*>(arr + 2);
+    length_ptr[0] = 1;
 
     spi->chipDeselect();
-    const auto save = spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));
+    const auto save = spi->transferBytes(arr, 4);
     spi->chipSelect();
 
     // 2. Enable writing
@@ -113,13 +119,11 @@ void EEPROM_25LC040A::writeBit(const_type<pointer_size> address, const_type<bit>
     spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));
     spi->chipSelect();
 
-    // 3. Create byte array which consists of instruction (2 bytes) and saved bites with one bit changed (1 bytes)
+    // 3. Write byte array
     instruction = createInstruction(address, CMD_WRITE);
-    byte arr[5];
     arr[0] = instruction & 0x00FF; // 1st lowest byte
     arr[1] = (instruction & 0xFF00) >> 8; // 2nd lowest byte
 
-    word* length_ptr = reinterpret_cast<word*>(arr + 2);
     length_ptr[0] = 1; // arr[2] and arr[3] are length to write
     arr[4] = data << 7 | *save & 0x7F; // 3rd lowest byte, 1st new bit, other are saved
 
