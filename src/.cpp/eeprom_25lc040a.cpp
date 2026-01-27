@@ -1,6 +1,8 @@
 #include "../include/eeprom_25lc040a.h"
 #include <stdexcept>
 
+#include <iostream>
+
 EEPROM_25LC040A::EEPROM_25LC040A(ISpiBitBang* spi) noexcept : spi(spi) {}
 
 bit EEPROM_25LC040A::readBit(const_type<pointer_size> address) {
@@ -9,7 +11,7 @@ bit EEPROM_25LC040A::readBit(const_type<pointer_size> address) {
     validateAddress(address);
     validateState();
 
-    // Instruction format: 0000<9_bit_address>011
+
     word instruction = createInstruction(address, CMD_READ);
 
     spi->chipDeselect();
@@ -75,7 +77,6 @@ void EEPROM_25LC040A::writeBit(const_type<pointer_size> address, const_type<bit>
     // 0000_0000 - will be after record.
 
     // 1. Save current byte
-
     word instruction = createInstruction(address, CMD_READ);
 
     spi->chipDeselect();
@@ -83,7 +84,6 @@ void EEPROM_25LC040A::writeBit(const_type<pointer_size> address, const_type<bit>
     spi->chipSelect();
 
     // 2. Enable writing
-
     instruction = createInstruction(address, CMD_WREN);
 
     spi->chipDeselect();
@@ -91,15 +91,21 @@ void EEPROM_25LC040A::writeBit(const_type<pointer_size> address, const_type<bit>
     spi->chipSelect();
 
     // 3. Create byte array which consists of instruction (2 bytes) and saved bites with one bit changed (1 bytes)
-
     instruction = createInstruction(address, CMD_WRITE);
-    byte byte_array[3] {};
-    byte_array[0] = instruction & 0xF0; // 1st byte
-    byte_array[1] = instruction & 0xF; // 2nd byte
-    byte_array[2] = data << 7 | *save & 0x7F; // 1st - new bit, other are saved
+    byte arr[3];
+    arr[0] = instruction & 0x00FF; // 1st lowest byte
+    arr[1] = (instruction & 0xFF00) >> 8; // 2nd lowest byte
+    arr[2] = data << 7 | *save & 0x7F; // 3rd lowest byte, 1st new bit, other are saved
 
     spi->chipDeselect();
-    spi->transferBytes(byte_array, sizeof(byte_array));
+    spi->transferBytes(arr, sizeof(arr));
+    spi->chipSelect();
+
+    // 4. Disable writing
+    instruction = createInstruction(address, CMD_WRDI);
+
+    spi->chipDeselect();
+    spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));
     spi->chipSelect();
 }
 
@@ -108,7 +114,6 @@ void EEPROM_25LC040A::writeByte(const_type<pointer_size> address, const_type<byt
     validateState();
 
     // 1. Enable writing
-
     word instruction = createInstruction(address, CMD_WREN);
 
     spi->chipDeselect();
@@ -118,13 +123,20 @@ void EEPROM_25LC040A::writeByte(const_type<pointer_size> address, const_type<byt
     // 2. Create byte array which consists of instruction (2 bytes) and saved bites with one bit changed (1 bytes)
 
     instruction = createInstruction(address, CMD_WRITE);
-    byte byte_array[3] {};
-    byte_array[0] = instruction & 0xF0; // 1st byte
-    byte_array[1] = instruction & 0xF; // 2nd byte
-    byte_array[2] = data; // 3th byte
+    byte arr[3];
+    arr[0] = instruction & 0x00FF; // 1st lowest byte
+    arr[1] = (instruction & 0xFF00) >> 8; // 2nd lowest byte
+    arr[2] = data; // 3th byte
 
     spi->chipDeselect();
-    spi->transferBytes(byte_array, sizeof(byte_array));
+    spi->transferBytes(arr, sizeof(arr));
+    spi->chipSelect();
+
+    // 3. Disable writing
+    instruction = createInstruction(address, CMD_WRDI);
+
+    spi->chipDeselect();
+    spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));
     spi->chipSelect();
 }
 
@@ -137,7 +149,6 @@ void EEPROM_25LC040A::writeByteArray(const_type<pointer_size> address, const byt
     validateState();
 
     // 1. Enable writing
-
     word instruction = createInstruction(address, CMD_WREN);
 
     spi->chipDeselect();
@@ -145,7 +156,6 @@ void EEPROM_25LC040A::writeByteArray(const_type<pointer_size> address, const byt
     spi->chipSelect();
 
     // 2. Send command to write
-
     instruction = createInstruction(address, CMD_WRITE);
     spi->chipDeselect();
     spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));

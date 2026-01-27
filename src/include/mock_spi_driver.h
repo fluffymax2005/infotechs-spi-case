@@ -3,9 +3,9 @@
 
     #include "eeprom_25lc040a.h"
     #include "spi_interface.h"
-    
+
     #include <unordered_map>
-    
+
     class MockSpi : public ISpiBitBang {
     public:
         struct Array_info {
@@ -13,8 +13,8 @@
             array_size length;
         };
 
-        MockSpi() = default;  
-        ~MockSpi() = default;      
+        MockSpi() = default;
+        ~MockSpi() = default;
 
         void chipSelect() override;
         void chipDeselect() override;
@@ -35,7 +35,7 @@
         std::unordered_map<pointer_size, Array_info> address_data;
 
         enum PinState : byte {
-            LOW = 0, 
+            LOW = 0,
             HIGH = 1
         };
 

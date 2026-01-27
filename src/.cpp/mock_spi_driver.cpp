@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <thread>
 
+#include <iostream>
+
 void MockSpi::chipSelect() {
     SS = HIGH;
     if (writeInitiated)
@@ -30,7 +32,7 @@ byte_array MockSpi::transferBytes(const byte_array data, const_type<array_size> 
         throw std::invalid_argument("MockSpi::transferBytes: data is nullptr");
     if (SS == HIGH)
         throw std::runtime_error("MockSpi::transferBytes: SS latch state is HIGH");
-    
+
     const word instruction = data[0] | data[1] << 8;
     const byte COMMAND = instruction & 0x0007;
     const dword ADDRESS = (instruction & 0x0FF8) >> 3;
@@ -68,7 +70,7 @@ void MockSpi::setByteArrayResponseByAddress(const_type<pointer_size> address, by
     if (!data || length < 3)
         return;
 
-    Array_info info{data, length};
+    const Array_info info{data, length};
     address_data[address] = info;
 }
 
@@ -82,6 +84,6 @@ MockSpi::Array_info MockSpi::getByteArrayByAddress(const_type<pointer_size> addr
 byte_array MockSpi::handle_read_command(const_type<pointer_size> address) {
     const auto it = address_data.find(address);
     if (it == address_data.end())
-        throw new std::runtime_error("MockSpi::transferBytes: CMD_READ command failed. Reason: not data by given address");
+        throw std::runtime_error("MockSpi::transferBytes: CMD_READ command failed. Reason: not data by given address");
     return reinterpret_cast<byte_array>(it->second.ptr);
 }
