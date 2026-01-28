@@ -11,6 +11,7 @@ cd infotechs-spi-case
 
 <h2>3. Generate documentation (optional)</h2>
 
-<code>doxygen docs/Doxyfile</code>
+<code>cd docs
+doxygen Doxyfile</code>
 
 HTML document will be located by path: **docs/html/index.html**. Any browser which supports JavaScript will be available to display file properly.
