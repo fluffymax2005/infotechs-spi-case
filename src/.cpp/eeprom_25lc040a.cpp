@@ -188,25 +188,23 @@ void EEPROM_25LC040A::writeByteArray(const_type<pointer_size> address, const byt
     spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));
     spi->chipSelect();
 
-    // 2. Send command to write
+    // 2. Write
     instruction = createInstruction(address, CMD_WRITE);
-    spi->chipDeselect();
-    spi->transferBytes(reinterpret_cast<byte_array>(&instruction), sizeof(instruction));
-    spi->chipSelect();
-    
-    // 3. Write bytes arr
-    #ifdef WRITE_BY_BYTE
-        for (pointer_size i = 0; i < length; ++i) {
-            spi->chipDeselect();
-            spi->transferBytes(data + i, sizeof(byte));
-            spi->chipSelect();
-        }
-    #elif WRITE_FULL_BLOCK
-        spi->chipSelect();
-        spi->transferBytes(data, length * sizeof(byte));
-    #endif
+    byte arr[4 + length];
+    arr[0] = instruction & 0x00FF; // 1st lowest byte
+    arr[1] = (instruction & 0xFF00) >> 8; // 2nd lowest byte
 
-    // 4. Disable data writing
+    word* length_ptr = reinterpret_cast<word*>(arr + 2);
+    length_ptr[0] = length; // arr[2] and arr[3] are length to write
+
+    for (pointer_size i = 0; i < length; ++i)
+        arr[4 + i] = data[i];
+
+    spi->chipDeselect();
+    spi->transferBytes(arr, sizeof(arr));
+    spi->chipSelect();
+
+    // 3. Disable data writing
     instruction = createInstruction(address, CMD_WRDI);
 
     spi->chipDeselect();
