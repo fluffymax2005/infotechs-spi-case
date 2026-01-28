@@ -16,8 +16,8 @@
         static constexpr byte MAX_BYTES_TO_WRITE_AT_ONCE = 16;
 
         enum Command : byte {
-            CMD_READ = 0b011,
-            CMD_WRITE = 0b010,
+            CMD_READ = 0b011, 
+            CMD_WRITE = 0b010, ///< Test
             CMD_WREN = 0b110,
             CMD_WRDI = 0b100,
             CMD_RDSR = 0b101,
