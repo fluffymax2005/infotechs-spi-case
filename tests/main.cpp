@@ -1,19 +1,61 @@
+/**
+* @file main.cpp
+* @brief Main file for testing.
+*/
+
 #include "../src/include/mock_spi_driver.h"
 #include "test_runner.h"
 #include <cassert>
 
+/* 
+* @def INVALID_TEST_RUN
+* @brief Whether test that causes 100% crashed are executed.
+*/
 //#define INVALID_TEST_RUN
 
+/**
+* @brief Execute test to read from bad address.
+*/
 void testReadBadAddress();
+
+/**
+* @brief Execute test to read bit.
+*/
 void testReadBit();
+
+/**
+* @brief Execute test to read byte.
+*/
 void testReadByte();
+
+/**
+* @brief Execute test to read byte array.
+*/
 void testReadByteArray();
 
+/**
+* @brief Execute test to write bit at bad address.
+*/
 void testWriteBadAddress();
+
+/**
+* @brief Execute test to write bit.
+*/
 void testWriteBit();
+
+/**
+* @brief Execute test to write byte.
+*/
 void testWriteByte();
+
+/**
+* @brief Execute test to write byte array.
+*/
 void testWriteByteArray();
 
+/**
+* @ brief Entry point to programm.
+*/
 int main() {
     TestRunner runner;
 

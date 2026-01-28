@@ -32,7 +32,7 @@
 
 	/**
 	* @enum Command
-	* @brief Set of possible command for EEPROM_25LC040A.
+	* @brief Set of possible commands for EEPROM_25LC040A.
 	*/
         enum Command : byte {
             CMD_READ = 0b011, ///< Read.
@@ -68,6 +68,7 @@
         const bit readBit(const_type<pointer_size> address) const;
 
 	/**
+	* @brief Read byte value by address.
         * @param address address to read byte from.
         * @throw 
 	* - std::runtime_error if spi == nullptr.
@@ -75,14 +76,13 @@
 	* - std::runtime_error device is stopped. Should use EEPROM_25LC040A::resume.
 	* - std::exception See MockSpi::transferbytes for information.
         * @return read byte value.
-        * @brief Read byte value by address.
-       */	
+        */	
         const byte readByte(const_type<pointer_size> address) const;
 
 	/**
+	* @brief Read byte array by address.
         * @param address address to read byte array from.
-	* @param bytes count to read.
-	* @param length bytes count to read
+	* @param length bytes count to read.
         * @throw 
 	* - std::runtime_error if spi == nullptr.
 	* - std::invalid_argument if length == 0.
@@ -90,9 +90,8 @@
 	* - std::runtime_error device is stopped. Should use EEPROM_25LC040A::resume.
 	* - std::exception See MockSpi::transferbytes for information.
         * @return pointer to requested segment.
-	* @note: received byte array must be released <TT><b>manually</b></TT>.
+	* @note received byte array must be released <TT><b>manually</b></TT>.
 	* @warning if <TT>address + length > EEPROM_25LC040A::MAX_ADDRESS</TT>. When internal "pointer" of reading data from @c memory will reach <TT>EEPROM_25LC040A::MAX_ADDRESS + 1</TT> "pointer" will be assigned @c NULL and will continue reading unless all requested data is read.
-        * @brief Read byte array by address.
         */
         const byte_array readByteArray(const_type<pointer_size> address, const_type<array_size> length) const;
 
