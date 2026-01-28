@@ -15,43 +15,43 @@
     #include <type_traits>
 
     /**
-    *   @typedef
+    *   @typedef bit
     *   @brief Bit type.
     */
     using bit = bool;
 
     /**
-    *   @typedef
+    *   @typedef byte
     *   @brief Byte type.
     */
     using byte = uint8_t;
 
     /**
-    *   @typedef
+    *   @typedef word
     *   @brief Machine word type.
     */
     using word = uint16_t;
 
     /**
-    *   @typedef
+    *   @typedef dword
     *   @brief Machine double word type.
     */
     using dword = uint32_t;
 
     /**
-    *   @typedef
+    *   @typedef byte_array
     *   @brief Byte array type.
     */
     using byte_array = byte*;
 
     /**
-    *   @typedef
+    *   @typedef array_size
     *   @brief Type of byte array size.
     */
     using array_size = dword;
 
     /**
-    *   @typedef
+    *   @typedef const_type
     *   @brief Template using for efficient arguments transfer into method (function).
     *   @returns 
     *    - <b><TT>const T&</TT></b> if sizeof(void*) < sizeof(T).
@@ -98,6 +98,7 @@
 
 	/**
 	* @param data byte array value to transfer.
+	* @param length byte count to transfer.
 	* @returns byte value. It's meaning can be assigned manually.
         * @brief Transfers input byte array into device. 
         */

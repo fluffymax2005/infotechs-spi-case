@@ -6,7 +6,7 @@
 #ifndef MOCK_SPI_DRIVER
 
     /**
-    * @def
+    * @def MOCK_SPI_DRIVER
     * @brief Include module macros.
     */
     #define MOCK_SPI_DRIVER
@@ -131,13 +131,11 @@
 
 	/**
 	* @param address address of @c memory to write.
+	* @param data byte array to write.
 	* @param length byte count to write.
 	* @throw std::invalid_argument Given address is to read/write is greater than EEPROM_25LC040A::MAX_ADDRESS.
-	* @returns
-	* - @c nullptr if length == 0.
-	* - pointer to emulated @c memory.
-	* @warning if <TT>address + length > EEPROM_25LC040A::MAX_ADDRESS<TT>. When internal "pointer" of write data from @c memory will reach <TT>EEPROM_25LC040A::MAX_ADDRESS + 1</TT> "pointer" will be assigned @c NULL and will continue writing unless all given data is written.
-	* @brief Auxiliary method to handle read command
+	* @warning if <TT>address + length > EEPROM_25LC040A::MAX_ADDRESS</TT>. When internal "pointer" of write data from @c memory will reach <TT>EEPROM_25LC040A::MAX_ADDRESS + 1</TT> "pointer" will be assigned @c NULL and will continue writing unless all given data is written.
+	* @brief Auxiliary method to handle read command.
 	*/
         void handle_write_command(const_type<pointer_size> address, const byte_array data, array_size length);
     };

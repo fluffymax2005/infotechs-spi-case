@@ -16,13 +16,13 @@
     public:
 
 	/**
-	* @def
+	* @typedef char_t
 	* @brief Type of chars used to generate error message string.
 	*/
         using char_t = char;
 
 	/**
-	* @def
+	* @typedef const_string
 	* @brief String type to generate error message string.
 	*/
         using const_string = const char_t*;
