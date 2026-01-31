@@ -87,7 +87,7 @@
 	* @returns bit value. It's meaning can be assigned manually.
         * @brief Transfers input bit value into device.
         */
-        virtual byte transferBit(const_type<bit> data) = 0;
+        virtual bit transferBit(const_type<bit> data) = 0;
 
 	/**
 	* @param data byte value to transfer.
