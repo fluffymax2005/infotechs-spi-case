@@ -13,7 +13,7 @@ void MockSpi::chipDeselect() {
     SS = LOW;
 }
 
-byte MockSpi::transferBit(const_type<bit> data) {
+bit MockSpi::transferBit(const_type<bit> data) {
     throw NotImplementedException("MockSpi::transferBit: implementation is not provided");
 }
 
